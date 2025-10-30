@@ -71,11 +71,23 @@ function initializeAuth() {
     }
 
     // Check for saved session
-    const savedUser = localStorage.getItem('dmkygab_user');
+    const savedUser = localStorage.getItem('dmkygab_user') || sessionStorage.getItem('dmkygab_user');
     if (savedUser) {
         currentUser = JSON.parse(savedUser);
         isAuthenticated = true;
-        showMainApp();
+        
+        // Verify token with backend
+        api.auth.getMe()
+            .then(() => {
+                showMainApp();
+            })
+            .catch(() => {
+                // Token expired or invalid
+                localStorage.removeItem('dmkygab_user');
+                sessionStorage.removeItem('dmkygab_user');
+                currentUser = null;
+                isAuthenticated = false;
+            });
     }
 }
 
@@ -86,23 +98,44 @@ function handleLogin(e) {
     const password = document.getElementById('loginPassword').value;
     const rememberMe = document.getElementById('rememberMe').checked;
 
-    // Simple validation (in production, this would be server-side)
-    if (email && password) {
-        currentUser = {
-            name: 'John Doe',
-            email: email,
-            role: 'admin'
-        };
-        isAuthenticated = true;
-
-        if (rememberMe) {
-            localStorage.setItem('dmkygab_user', JSON.stringify(currentUser));
-        }
-
-        showMainApp();
-    } else {
-        alert('Please enter valid credentials');
+    // Validate inputs
+    if (!formValidation.validateEmail(email)) {
+        toast.error('Please enter a valid email address');
+        return;
     }
+
+    if (!password) {
+        toast.error('Please enter your password');
+        return;
+    }
+
+    // Show loading spinner
+    loadingSpinner.show('Logging in...');
+
+    // Call API
+    api.auth.login(email, password)
+        .then(response => {
+            loadingSpinner.hide();
+            
+            currentUser = {
+                ...response.user,
+                token: response.token
+            };
+            isAuthenticated = true;
+
+            if (rememberMe) {
+                localStorage.setItem('dmkygab_user', JSON.stringify(currentUser));
+            } else {
+                sessionStorage.setItem('dmkygab_user', JSON.stringify(currentUser));
+            }
+
+            toast.success('Login successful!');
+            showMainApp();
+        })
+        .catch(error => {
+            loadingSpinner.hide();
+            toast.error(error.message || 'Login failed. Please check your credentials.');
+        });
 }
 
 function handleRegister(e) {
@@ -115,37 +148,59 @@ function handleRegister(e) {
     const password = document.getElementById('regPassword').value;
     const confirmPassword = document.getElementById('regConfirmPassword').value;
 
-    // Validate password
-    if (password.length < 8) {
-        alert('Password must be at least 8 characters long');
+    // Validate email
+    if (!formValidation.validateEmail(email)) {
+        toast.error('Please enter a valid email address');
         return;
     }
 
+    // Validate phone
+    if (!formValidation.validatePhone(phone)) {
+        toast.error('Please enter a valid phone number');
+        return;
+    }
+
+    // Validate password length
+    if (password.length < 8) {
+        toast.error('Password must be at least 8 characters long');
+        return;
+    }
+
+    // Validate password match
     if (password !== confirmPassword) {
-        alert('Passwords do not match');
+        toast.error('Passwords do not match');
         return;
     }
 
     // Password strength validation
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/;
-    if (!passwordRegex.test(password)) {
-        alert('Password must include uppercase, lowercase, number, and special character');
+    if (!formValidation.validatePassword(password)) {
+        toast.error('Password must include uppercase, lowercase, number, and special character');
         return;
     }
 
-    // Create user account (in production, this would be server-side)
-    currentUser = {
-        name: name,
-        email: email,
-        phone: phone,
-        role: role
-    };
-    isAuthenticated = true;
+    // Show loading spinner
+    loadingSpinner.show('Creating your account...');
 
-    localStorage.setItem('dmkygab_user', JSON.stringify(currentUser));
-    
-    alert('Registration successful!');
-    showMainApp();
+    // Call API
+    api.auth.register({ name, email, phone, password, role })
+        .then(response => {
+            loadingSpinner.hide();
+            
+            currentUser = {
+                ...response.user,
+                token: response.token
+            };
+            isAuthenticated = true;
+
+            localStorage.setItem('dmkygab_user', JSON.stringify(currentUser));
+            
+            toast.success('Registration successful! Welcome to DMKyGab.');
+            showMainApp();
+        })
+        .catch(error => {
+            loadingSpinner.hide();
+            toast.error(error.message || 'Registration failed. Please try again.');
+        });
 }
 
 function showMainApp() {
@@ -166,10 +221,13 @@ function handleLogout() {
         currentUser = null;
         isAuthenticated = false;
         localStorage.removeItem('dmkygab_user');
+        sessionStorage.removeItem('dmkygab_user');
         
         document.getElementById('mainApp').style.display = 'none';
         document.getElementById('loginScreen').style.display = 'flex';
         document.getElementById('loginForm').reset();
+        
+        toast.info('You have been logged out successfully');
     }
 }
 
@@ -291,12 +349,47 @@ function loadTenantsPage() {
                     </tr>
                 </thead>
                 <tbody id="tenantsTableBody">
-                    ${renderTenantsTable()}
+                    <tr>
+                        <td colspan="8" style="text-align: center;">Loading...</td>
+                    </tr>
                 </tbody>
             </table>
         </div>
     `;
     document.getElementById('tenantsPage').innerHTML = content;
+    
+    // Load tenants from API
+    loadingSpinner.show('Loading tenants...');
+    api.tenants.getAll()
+        .then(response => {
+            loadingSpinner.hide();
+            const tbody = document.getElementById('tenantsTableBody');
+            if (response.data && response.data.length > 0) {
+                tbody.innerHTML = response.data.map(tenant => `
+                    <tr>
+                        <td><strong>${tenant.name}</strong></td>
+                        <td>Unit ${tenant.unit}</td>
+                        <td>${tenant.email}</td>
+                        <td>${tenant.phone}</td>
+                        <td>${formatCurrency(tenant.rent)}</td>
+                        <td>${formatDate(tenant.leaseEnd)}</td>
+                        <td><span class="status-badge normal">${tenant.status}</span></td>
+                        <td>
+                            <button class="btn btn-secondary" onclick="viewTenant('${tenant._id}')" style="padding: 5px 10px; font-size: 12px;">
+                                <i class="fas fa-eye"></i> View
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            } else {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;">No tenants found</td></tr>';
+            }
+        })
+        .catch(error => {
+            loadingSpinner.hide();
+            toast.error('Failed to load tenants: ' + error.message);
+            document.getElementById('tenantsTableBody').innerHTML = '<tr><td colspan="8" style="text-align: center;">Error loading tenants</td></tr>';
+        });
 }
 
 function renderTenantsTable() {
@@ -330,13 +423,13 @@ function loadMaintenancePage() {
                 <input type="text" placeholder="Search maintenance requests...">
                 <i class="fas fa-search"></i>
             </div>
-            <select>
+            <select id="maintenancePriorityFilter">
                 <option value="">All Priorities</option>
                 <option value="urgent">Urgent</option>
                 <option value="high">High</option>
                 <option value="normal">Normal</option>
             </select>
-            <select>
+            <select id="maintenanceStatusFilter">
                 <option value="">All Status</option>
                 <option value="open">Open</option>
                 <option value="in-progress">In Progress</option>
@@ -362,13 +455,49 @@ function loadMaintenancePage() {
                         <th>Actions</th>
                     </tr>
                 </thead>
-                <tbody>
-                    ${renderMaintenanceTable()}
+                <tbody id="maintenanceTableBody">
+                    <tr>
+                        <td colspan="9" style="text-align: center;">Loading...</td>
+                    </tr>
                 </tbody>
             </table>
         </div>
     `;
     document.getElementById('maintenancePage').innerHTML = content;
+    
+    // Load maintenance requests from API
+    loadingSpinner.show('Loading maintenance requests...');
+    api.maintenance.getAll()
+        .then(response => {
+            loadingSpinner.hide();
+            const tbody = document.getElementById('maintenanceTableBody');
+            if (response.data && response.data.length > 0) {
+                tbody.innerHTML = response.data.map((req, index) => `
+                    <tr>
+                        <td>#${index + 1}</td>
+                        <td>Unit ${req.unit}</td>
+                        <td>${req.tenant}</td>
+                        <td><strong>${req.issue}</strong></td>
+                        <td><span class="status-badge ${req.priority}">${req.priority}</span></td>
+                        <td><span class="status-badge normal">${req.status}</span></td>
+                        <td>${formatDate(req.createdAt)}</td>
+                        <td>${req.assignedTo || 'Unassigned'}</td>
+                        <td>
+                            <button class="btn btn-secondary" style="padding: 5px 10px; font-size: 12px;">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            } else {
+                tbody.innerHTML = '<tr><td colspan="9" style="text-align: center;">No maintenance requests found</td></tr>';
+            }
+        })
+        .catch(error => {
+            loadingSpinner.hide();
+            toast.error('Failed to load maintenance requests: ' + error.message);
+            document.getElementById('maintenanceTableBody').innerHTML = '<tr><td colspan="9" style="text-align: center;">Error loading maintenance requests</td></tr>';
+        });
 }
 
 function renderMaintenanceTable() {

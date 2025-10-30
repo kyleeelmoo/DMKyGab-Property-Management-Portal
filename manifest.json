@@ -1,0 +1,11 @@
+{
+  "name": "DMKyGab Property Management Portal",
+  "short_name": "DMKyGab Portal",
+  "description": "Comprehensive property management solution for superintendents and property managers",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#667eea",
+  "theme_color": "#667eea",
+  "orientation": "portrait-primary",
+  "categories": ["business", "productivity", "utilities"]
+}

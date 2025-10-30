@@ -86,23 +86,32 @@ function handleLogin(e) {
     const password = document.getElementById('loginPassword').value;
     const rememberMe = document.getElementById('rememberMe').checked;
 
-    // Simple validation (in production, this would be server-side)
-    if (email && password) {
-        currentUser = {
-            name: 'John Doe',
-            email: email,
-            role: 'admin'
-        };
-        isAuthenticated = true;
+    // Show loading spinner
+    showLoading();
+    
+    // Simulate API call delay
+    setTimeout(() => {
+        // Simple validation (in production, this would be server-side)
+        if (email && password) {
+            currentUser = {
+                name: 'John Doe',
+                email: email,
+                role: 'admin'
+            };
+            isAuthenticated = true;
 
-        if (rememberMe) {
-            localStorage.setItem('dmkygab_user', JSON.stringify(currentUser));
+            if (rememberMe) {
+                localStorage.setItem('dmkygab_user', JSON.stringify(currentUser));
+            }
+
+            hideLoading();
+            showToast('Login successful! Welcome back.', 'success', 'Success');
+            setTimeout(() => showMainApp(), 500);
+        } else {
+            hideLoading();
+            showToast('Please enter valid credentials', 'error', 'Login Failed');
         }
-
-        showMainApp();
-    } else {
-        alert('Please enter valid credentials');
-    }
+    }, 1000);
 }
 
 function handleRegister(e) {
@@ -117,35 +126,42 @@ function handleRegister(e) {
 
     // Validate password
     if (password.length < 8) {
-        alert('Password must be at least 8 characters long');
+        showToast('Password must be at least 8 characters long', 'error', 'Validation Error');
         return;
     }
 
     if (password !== confirmPassword) {
-        alert('Passwords do not match');
+        showToast('Passwords do not match', 'error', 'Validation Error');
         return;
     }
 
     // Password strength validation
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/;
     if (!passwordRegex.test(password)) {
-        alert('Password must include uppercase, lowercase, number, and special character');
+        showToast('Password must include uppercase, lowercase, number, and special character', 'error', 'Validation Error');
         return;
     }
 
-    // Create user account (in production, this would be server-side)
-    currentUser = {
-        name: name,
-        email: email,
-        phone: phone,
-        role: role
-    };
-    isAuthenticated = true;
-
-    localStorage.setItem('dmkygab_user', JSON.stringify(currentUser));
+    // Show loading spinner
+    showLoading();
     
-    alert('Registration successful!');
-    showMainApp();
+    // Simulate API call delay
+    setTimeout(() => {
+        // Create user account (in production, this would be server-side)
+        currentUser = {
+            name: name,
+            email: email,
+            phone: phone,
+            role: role
+        };
+        isAuthenticated = true;
+
+        localStorage.setItem('dmkygab_user', JSON.stringify(currentUser));
+        
+        hideLoading();
+        showToast('Registration successful! Welcome to MorataKGab Portal.', 'success', 'Success');
+        setTimeout(() => showMainApp(), 500);
+    }, 1000);
 }
 
 function showMainApp() {
@@ -648,14 +664,102 @@ function initializeNotifications() {
     }
 }
 
-// Modal Functions (Placeholder implementations)
+// Modal Functions
 function openAddTenantModal() {
-    alert('Add Tenant Modal - This would open a form to add a new tenant');
+    openModal('addTenantModal');
 }
 
 function openAddMaintenanceModal() {
-    alert('Add Maintenance Request Modal - This would open a form to create a new maintenance request');
+    openModal('addMaintenanceModal');
 }
+
+function submitAddTenant() {
+    const name = document.getElementById('tenantName').value;
+    const unit = document.getElementById('tenantUnit').value;
+    const email = document.getElementById('tenantEmail').value;
+    const phone = document.getElementById('tenantPhone').value;
+    const rent = document.getElementById('tenantRent').value;
+    const leaseEnd = document.getElementById('tenantLeaseEnd').value;
+
+    if (!name || !unit || !email || !phone || !rent || !leaseEnd) {
+        showToast('Please fill in all fields', 'error', 'Validation Error');
+        return;
+    }
+
+    showLoading();
+    
+    // Simulate API call
+    setTimeout(() => {
+        // Add to sample data
+        const newTenant = {
+            id: sampleTenants.length + 1,
+            name: name,
+            unit: unit,
+            email: email,
+            phone: phone,
+            rent: parseInt(rent),
+            status: 'active',
+            leaseEnd: leaseEnd
+        };
+        sampleTenants.push(newTenant);
+        
+        hideLoading();
+        closeModal('addTenantModal');
+        showToast(`Tenant ${name} added successfully!`, 'success', 'Success');
+        
+        // Refresh the tenants page if it's currently active
+        if (document.getElementById('tenantsPage').classList.contains('active')) {
+            loadTenantsPage();
+        }
+        
+        // Reset form
+        document.getElementById('addTenantForm').reset();
+    }, 800);
+}
+
+function submitAddMaintenance() {
+    const unit = document.getElementById('maintenanceUnit').value;
+    const priority = document.getElementById('maintenancePriority').value;
+    const issue = document.getElementById('maintenanceIssue').value;
+    const details = document.getElementById('maintenanceDetails').value;
+
+    if (!unit || !priority || !issue) {
+        showToast('Please fill in all required fields', 'error', 'Validation Error');
+        return;
+    }
+
+    showLoading();
+    
+    // Simulate API call
+    setTimeout(() => {
+        // Add to sample data
+        const newRequest = {
+            id: sampleMaintenanceRequests.length + 1,
+            unit: unit,
+            tenant: 'Current Tenant',
+            issue: issue,
+            priority: priority,
+            status: 'open',
+            date: new Date().toISOString().split('T')[0],
+            assignedTo: null,
+            details: details
+        };
+        sampleMaintenanceRequests.unshift(newRequest);
+        
+        hideLoading();
+        closeModal('addMaintenanceModal');
+        showToast('Maintenance request submitted successfully!', 'success', 'Success');
+        
+        // Refresh the maintenance page if it's currently active
+        if (document.getElementById('maintenancePage').classList.contains('active')) {
+            loadMaintenancePage();
+        }
+        
+        // Reset form
+        document.getElementById('addMaintenanceForm').reset();
+    }, 800);
+}
+
 
 function openAddLeaseModal() {
     alert('Add Lease Modal - This would open a form to create a new lease');
@@ -685,9 +789,105 @@ function formatDate(dateString) {
     });
 }
 
+// HTML escape function to prevent XSS
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
 // Export functions for global access
 window.loadPage = loadPage;
 window.openAddTenantModal = openAddTenantModal;
 window.openAddMaintenanceModal = openAddMaintenanceModal;
 window.openAddLeaseModal = openAddLeaseModal;
 window.viewTenant = viewTenant;
+window.submitAddTenant = submitAddTenant;
+window.submitAddMaintenance = submitAddMaintenance;
+
+// Loading Spinner Functions
+function showLoading() {
+    let spinner = document.getElementById('loadingSpinner');
+    if (!spinner) {
+        spinner = document.createElement('div');
+        spinner.id = 'loadingSpinner';
+        spinner.className = 'loading-spinner';
+        spinner.innerHTML = '<div class="spinner"></div>';
+        document.body.appendChild(spinner);
+    }
+    spinner.classList.add('active');
+}
+
+function hideLoading() {
+    const spinner = document.getElementById('loadingSpinner');
+    if (spinner) {
+        spinner.classList.remove('active');
+    }
+}
+
+// Toast Notification Functions
+function showToast(message, type = 'info', title = '') {
+    let toastContainer = document.getElementById('toastContainer');
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.id = 'toastContainer';
+        toastContainer.className = 'toast-container';
+        document.body.appendChild(toastContainer);
+    }
+
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    
+    const icons = {
+        success: 'fa-check-circle',
+        error: 'fa-exclamation-circle',
+        warning: 'fa-exclamation-triangle',
+        info: 'fa-info-circle'
+    };
+    
+    // Escape user input to prevent XSS
+    const escapedTitle = title ? escapeHtml(title) : '';
+    const escapedMessage = escapeHtml(message);
+    
+    toast.innerHTML = `
+        <i class="fas ${icons[type]}"></i>
+        <div class="toast-message">
+            ${escapedTitle ? `<strong>${escapedTitle}</strong>` : ''}
+            <span>${escapedMessage}</span>
+        </div>
+        <button class="toast-close" onclick="this.parentElement.remove()">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+    
+    toastContainer.appendChild(toast);
+    
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+        if (toast.parentElement) {
+            toast.remove();
+        }
+    }, 5000);
+}
+
+// Modal Functions
+function openModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.add('active');
+    }
+}
+
+function closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.remove('active');
+    }
+}
+
+// Export new functions
+window.showLoading = showLoading;
+window.hideLoading = hideLoading;
+window.showToast = showToast;
+window.openModal = openModal;
+window.closeModal = closeModal;

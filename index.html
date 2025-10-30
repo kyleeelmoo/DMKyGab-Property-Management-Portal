@@ -39,6 +39,10 @@
                 <p class="auth-switch">Don't have an account? <a href="#" id="showRegister">Register here</a></p>
             </form>
         </div>
+        <div class="auth-branding">
+            <div class="brand-name">MorataKGab</div>
+            <div class="creators">Created by: MSheryll &amp; KElmo</div>
+        </div>
     </div>
 
     <!-- Registration Screen -->
@@ -96,6 +100,10 @@
                 <button type="submit" class="btn btn-primary">Register</button>
                 <p class="auth-switch">Already have an account? <a href="#" id="showLogin">Login here</a></p>
             </form>
+        </div>
+        <div class="auth-branding">
+            <div class="brand-name">MorataKGab</div>
+            <div class="creators">Created by: MSheryll &amp; KElmo</div>
         </div>
     </div>
 
@@ -337,6 +345,96 @@
             <div id="financialsPage" class="page"></div>
             <div id="analyticsPage" class="page"></div>
         </main>
+    </div>
+
+    <!-- Add Tenant Modal -->
+    <div id="addTenantModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Add New Tenant</h2>
+                <button class="modal-close" onclick="closeModal('addTenantModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="addTenantForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="tenantName"><i class="fas fa-user"></i> Full Name</label>
+                            <input type="text" id="tenantName" required placeholder="Enter tenant name">
+                        </div>
+                        <div class="form-group">
+                            <label for="tenantUnit"><i class="fas fa-door-open"></i> Unit Number</label>
+                            <input type="text" id="tenantUnit" required placeholder="e.g., 302">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="tenantEmail"><i class="fas fa-envelope"></i> Email</label>
+                            <input type="email" id="tenantEmail" required placeholder="Enter email">
+                        </div>
+                        <div class="form-group">
+                            <label for="tenantPhone"><i class="fas fa-phone"></i> Phone</label>
+                            <input type="tel" id="tenantPhone" required placeholder="Enter phone number">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="tenantRent"><i class="fas fa-dollar-sign"></i> Monthly Rent</label>
+                            <input type="number" id="tenantRent" required placeholder="e.g., 1500">
+                        </div>
+                        <div class="form-group">
+                            <label for="tenantLeaseEnd"><i class="fas fa-calendar"></i> Lease End Date</label>
+                            <input type="date" id="tenantLeaseEnd" required>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('addTenantModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="submitAddTenant()">Add Tenant</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Maintenance Request Modal -->
+    <div id="addMaintenanceModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>New Maintenance Request</h2>
+                <button class="modal-close" onclick="closeModal('addMaintenanceModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="addMaintenanceForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="maintenanceUnit"><i class="fas fa-door-open"></i> Unit Number</label>
+                            <input type="text" id="maintenanceUnit" required placeholder="e.g., 302">
+                        </div>
+                        <div class="form-group">
+                            <label for="maintenancePriority"><i class="fas fa-exclamation-triangle"></i> Priority</label>
+                            <select id="maintenancePriority" required>
+                                <option value="">Select Priority</option>
+                                <option value="urgent">Urgent</option>
+                                <option value="high">High</option>
+                                <option value="normal">Normal</option>
+                                <option value="low">Low</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="maintenanceIssue"><i class="fas fa-wrench"></i> Issue Description</label>
+                        <input type="text" id="maintenanceIssue" required placeholder="Brief description of the issue">
+                    </div>
+                    <div class="form-group">
+                        <label for="maintenanceDetails"><i class="fas fa-align-left"></i> Detailed Description</label>
+                        <textarea id="maintenanceDetails" rows="4" placeholder="Provide detailed information about the maintenance issue..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('addMaintenanceModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="submitAddMaintenance()">Submit Request</button>
+            </div>
+        </div>
     </div>
 
     <script src="assets/js/app.js"></script>

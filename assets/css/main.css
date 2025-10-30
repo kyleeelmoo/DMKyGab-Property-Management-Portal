@@ -6,17 +6,20 @@
 }
 
 :root {
-    --primary-color: #2c3e50;
-    --secondary-color: #3498db;
+    /* MorataKGapp Brand Colors */
+    --primary-color: #5F4B8B; /* Ultra Violet */
+    --secondary-color: #CDC1E5; /* Soft Lavender */
+    --accent-white: #FFFFFF; /* White */
+    --accent-dark: #333333; /* Dark Grey */
     --success-color: #27ae60;
     --danger-color: #e74c3c;
     --warning-color: #f39c12;
     --info-color: #16a085;
-    --light-bg: #ecf0f1;
-    --dark-bg: #34495e;
-    --text-dark: #2c3e50;
+    --light-bg: #f5f5f5;
+    --dark-bg: #333333;
+    --text-dark: #333333;
     --text-light: #7f8c8d;
-    --border-color: #bdc3c7;
+    --border-color: #CDC1E5;
     --sidebar-width: 260px;
     --topnav-height: 60px;
 }
@@ -34,7 +37,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #5F4B8B 0%, #CDC1E5 100%);
     padding: 20px;
 }
 
@@ -60,7 +63,7 @@ body {
 }
 
 .auth-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #5F4B8B 0%, #CDC1E5 100%);
     color: white;
     padding: 30px;
     text-align: center;
@@ -142,14 +145,16 @@ body {
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #5F4B8B 0%, #CDC1E5 100%);
     color: white;
     width: 100%;
+    transition: all 0.3s ease;
 }
 
 .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 5px 15px rgba(95, 75, 139, 0.4);
+    background: linear-gradient(135deg, #4a3a6d 0%, #b8a9d4 100%);
 }
 
 .btn-secondary {
@@ -535,7 +540,7 @@ body {
 }
 
 .stat-icon.blue {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #5F4B8B 0%, #CDC1E5 100%);
 }
 
 .stat-icon.green {
@@ -547,7 +552,7 @@ body {
 }
 
 .stat-icon.purple {
-    background: linear-gradient(135deg, #8e2de2 0%, #4a00e0 100%);
+    background: linear-gradient(135deg, #5F4B8B 0%, #4a3a6d 100%);
 }
 
 .stat-info h3 {
@@ -900,3 +905,144 @@ body {
 .hidden {
     display: none;
 }
+
+/* Brand Footer for Auth Pages */
+.auth-brand-footer {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 2px solid var(--border-color);
+    text-align: center;
+}
+
+.brand-name-footer {
+    font-family: 'Segoe UI', 'Arial Black', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    background: linear-gradient(135deg, #5F4B8B 0%, #CDC1E5 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 10px;
+    letter-spacing: 1px;
+}
+
+.creator-credits {
+    font-size: 12px;
+    color: var(--text-light);
+    font-style: italic;
+    margin-top: 8px;
+}
+
+.creator-credits strong {
+    color: var(--primary-color);
+}
+
+/* Enhanced button styles with feedback */
+.btn {
+    position: relative;
+    overflow: hidden;
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.btn:active::before {
+    width: 300px;
+    height: 300px;
+}
+
+/* Sidebar menu item hover effects */
+.sidebar-menu a {
+    position: relative;
+    overflow: hidden;
+}
+
+.sidebar-menu a::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 3px;
+    background: var(--secondary-color);
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+}
+
+.sidebar-menu a:hover::before,
+.sidebar-menu li.active a::before {
+    transform: translateX(0);
+}
+
+/* Enhanced card hover effects */
+.stat-card, .dashboard-card {
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.stat-card::after, .dashboard-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 10px;
+    box-shadow: 0 8px 25px rgba(95, 75, 139, 0.15);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.stat-card:hover::after, .dashboard-card:hover::after {
+    opacity: 1;
+}
+
+/* Modern logo styling */
+.logo {
+    font-family: 'Segoe UI', 'Arial Black', sans-serif;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+}
+
+.logo span {
+    background: linear-gradient(135deg, #5F4B8B 0%, #CDC1E5 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Tab/Button animation effects */
+.btn, .sidebar-menu a, .notification-icon, .user-menu {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn:active {
+    transform: scale(0.95) translateY(0);
+}
+
+/* Loading animation for interactive elements */
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+.btn:disabled {
+    animation: pulse 1.5s ease-in-out infinite;
+    cursor: not-allowed;
+}
+

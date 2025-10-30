@@ -1,8 +1,17 @@
 // DMKyGab Property Management Portal - Main Application JavaScript
 
+// API Configuration
+const API_BASE_URL = window.location.origin + '/api';
+
 // Authentication State
 let currentUser = null;
 let isAuthenticated = false;
+let verificationState = {
+  email: null,
+  codeVerified: false,
+  verificationCode: null,
+  type: null
+};
 
 // Sample Data
 const sampleTenants = [
@@ -52,6 +61,27 @@ function initializeAuth() {
 
     if (registerForm) {
         registerForm.addEventListener('submit', handleRegister);
+        
+        // Add email verification button to registration form
+        const regEmail = document.getElementById('regEmail');
+        if (regEmail && !document.getElementById('sendVerificationBtn')) {
+            const verifyBtn = document.createElement('button');
+            verifyBtn.type = 'button';
+            verifyBtn.className = 'btn btn-secondary';
+            verifyBtn.id = 'sendVerificationBtn';
+            verifyBtn.innerHTML = '<i class="fas fa-envelope"></i> Send Verification Code';
+            verifyBtn.style.marginTop = '10px';
+            verifyBtn.style.width = '100%';
+            
+            const verifyContainer = document.createElement('div');
+            verifyContainer.id = 'verificationContainer';
+            verifyContainer.style.marginTop = '10px';
+            
+            regEmail.parentElement.appendChild(verifyBtn);
+            regEmail.parentElement.appendChild(verifyContainer);
+            
+            verifyBtn.addEventListener('click', handleSendVerificationCode);
+        }
     }
 
     if (showRegisterLink) {
@@ -71,41 +101,89 @@ function initializeAuth() {
     }
 
     // Check for saved session
-    const savedUser = localStorage.getItem('dmkygab_user');
-    if (savedUser) {
-        currentUser = JSON.parse(savedUser);
-        isAuthenticated = true;
-        showMainApp();
+    checkAuthStatus();
+}
+
+async function checkAuthStatus() {
+    const token = localStorage.getItem('dmkygab_token');
+    if (token) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/auth/me`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                currentUser = data.user;
+                isAuthenticated = true;
+                showMainApp();
+            } else {
+                localStorage.removeItem('dmkygab_token');
+                localStorage.removeItem('dmkygab_user');
+            }
+        } catch (error) {
+            console.error('Auth check failed:', error);
+            localStorage.removeItem('dmkygab_token');
+            localStorage.removeItem('dmkygab_user');
+        }
     }
 }
 
-function handleLogin(e) {
+async function handleLogin(e) {
     e.preventDefault();
     
     const email = document.getElementById('loginEmail').value;
     const password = document.getElementById('loginPassword').value;
     const rememberMe = document.getElementById('rememberMe').checked;
 
-    // Simple validation (in production, this would be server-side)
-    if (email && password) {
-        currentUser = {
-            name: 'John Doe',
-            email: email,
-            role: 'admin'
-        };
-        isAuthenticated = true;
+    if (!email || !password) {
+        showMessage('Please enter email and password', 'error');
+        return;
+    }
 
-        if (rememberMe) {
-            localStorage.setItem('dmkygab_user', JSON.stringify(currentUser));
+    showLoading(true);
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/auth/login`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ email, password })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            if (data.status === 'pending') {
+                showMessage('Your account is pending admin approval. You will be notified when approved.', 'warning');
+            } else if (data.status === 'rejected') {
+                showMessage('Your account registration was not approved. Please contact support.', 'error');
+            } else {
+                throw new Error(data.error || 'Login failed');
+            }
+            return;
         }
 
-        showMainApp();
-    } else {
-        alert('Please enter valid credentials');
+        // Save token and user data
+        localStorage.setItem('dmkygab_token', data.token);
+        localStorage.setItem('dmkygab_user', JSON.stringify(data.user));
+        
+        currentUser = data.user;
+        isAuthenticated = true;
+
+        showMessage('Login successful!', 'success');
+        setTimeout(() => showMainApp(), 1000);
+    } catch (error) {
+        showMessage(error.message || 'Login failed', 'error');
+    } finally {
+        showLoading(false);
     }
 }
 
-function handleRegister(e) {
+async function handleRegister(e) {
     e.preventDefault();
 
     const name = document.getElementById('regName').value;
@@ -115,37 +193,74 @@ function handleRegister(e) {
     const password = document.getElementById('regPassword').value;
     const confirmPassword = document.getElementById('regConfirmPassword').value;
 
+    // Validate email verification
+    if (!verificationState.codeVerified || verificationState.email !== email) {
+        showMessage('Please verify your email address first', 'error');
+        return;
+    }
+
     // Validate password
     if (password.length < 8) {
-        alert('Password must be at least 8 characters long');
+        showMessage('Password must be at least 8 characters long', 'error');
         return;
     }
 
     if (password !== confirmPassword) {
-        alert('Passwords do not match');
+        showMessage('Passwords do not match', 'error');
         return;
     }
 
     // Password strength validation
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/;
     if (!passwordRegex.test(password)) {
-        alert('Password must include uppercase, lowercase, number, and special character');
+        showMessage('Password must include uppercase, lowercase, number, and special character', 'error');
         return;
     }
 
-    // Create user account (in production, this would be server-side)
-    currentUser = {
-        name: name,
-        email: email,
-        phone: phone,
-        role: role
-    };
-    isAuthenticated = true;
+    showLoading(true);
 
-    localStorage.setItem('dmkygab_user', JSON.stringify(currentUser));
-    
-    alert('Registration successful!');
-    showMainApp();
+    try {
+        const response = await fetch(`${API_BASE_URL}/auth/register`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                name,
+                email,
+                phone,
+                role,
+                password,
+                verificationCode: verificationState.verificationCode
+            })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || 'Registration failed');
+        }
+
+        showMessage('Registration successful! Your account is pending admin approval. You will be notified by email.', 'success');
+        
+        // Reset form and switch to login
+        document.getElementById('registerForm').reset();
+        verificationState = {
+            email: null,
+            codeVerified: false,
+            verificationCode: null,
+            type: null
+        };
+        
+        setTimeout(() => {
+            document.getElementById('registerScreen').style.display = 'none';
+            document.getElementById('loginScreen').style.display = 'flex';
+        }, 2000);
+    } catch (error) {
+        showMessage(error.message || 'Registration failed', 'error');
+    } finally {
+        showLoading(false);
+    }
 }
 
 function showMainApp() {
@@ -683,6 +798,216 @@ function formatDate(dateString) {
         month: 'short',
         day: 'numeric'
     });
+}
+
+// Email verification helper functions
+async function handleSendVerificationCode() {
+    const email = document.getElementById('regEmail').value;
+    
+    if (!email || !isValidEmail(email)) {
+        showMessage('Please enter a valid email address', 'error');
+        return;
+    }
+
+    const btn = document.getElementById('sendVerificationBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/auth/send-verification-code`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, type: 'registration' })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || 'Failed to send code');
+        }
+
+        verificationState.email = email;
+        verificationState.type = 'registration';
+        
+        showMessage('Verification code sent! Check your email.', 'success');
+        showVerificationInput();
+
+        // Start countdown timer
+        startCountdown(btn, data.expiresIn * 60);
+    } catch (error) {
+        showMessage(error.message, 'error');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-envelope"></i> Send Verification Code';
+    }
+}
+
+function showVerificationInput() {
+    const container = document.getElementById('verificationContainer');
+    container.innerHTML = `
+        <div class="form-group" style="margin-top: 10px;">
+            <label for="verificationCodeInput">
+                <i class="fas fa-key"></i> Verification Code
+            </label>
+            <input type="text" id="verificationCodeInput" placeholder="Enter 6-digit code" maxlength="6" pattern="[0-9]{6}" required>
+            <button type="button" class="btn btn-primary" id="verifyCodeBtn" style="margin-top: 10px; width: 100%;">
+                <i class="fas fa-check"></i> Verify Code
+            </button>
+            <div id="verificationStatus" style="margin-top: 10px; text-align: center;"></div>
+        </div>
+    `;
+
+    document.getElementById('verifyCodeBtn').addEventListener('click', handleVerifyCode);
+}
+
+async function handleVerifyCode() {
+    const code = document.getElementById('verificationCodeInput').value;
+    
+    if (!code || code.length !== 6) {
+        showMessage('Please enter the 6-digit code', 'error');
+        return;
+    }
+
+    const btn = document.getElementById('verifyCodeBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/auth/verify-code`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                email: verificationState.email, 
+                code 
+            })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || 'Verification failed');
+        }
+
+        verificationState.codeVerified = true;
+        verificationState.verificationCode = code;
+        
+        const statusDiv = document.getElementById('verificationStatus');
+        statusDiv.innerHTML = '<span style="color: #28a745; font-weight: bold;"><i class="fas fa-check-circle"></i> Email verified!</span>';
+        
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-check"></i> Verified';
+        btn.style.backgroundColor = '#28a745';
+        
+        showMessage('Email verified successfully!', 'success');
+    } catch (error) {
+        showMessage(error.message, 'error');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-check"></i> Verify Code';
+    }
+}
+
+function startCountdown(button, seconds) {
+    let remaining = seconds;
+    
+    const interval = setInterval(() => {
+        remaining--;
+        const minutes = Math.floor(remaining / 60);
+        const secs = remaining % 60;
+        
+        button.innerHTML = `<i class="fas fa-clock"></i> Resend in ${minutes}:${secs.toString().padStart(2, '0')}`;
+        
+        if (remaining <= 0) {
+            clearInterval(interval);
+            button.disabled = false;
+            button.innerHTML = '<i class="fas fa-envelope"></i> Resend Code';
+        }
+    }, 1000);
+}
+
+function isValidEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+// UI Helper functions
+function showMessage(message, type = 'info') {
+    let messageDiv = document.getElementById('messageBox');
+    if (!messageDiv) {
+        messageDiv = document.createElement('div');
+        messageDiv.id = 'messageBox';
+        messageDiv.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 5px;
+            max-width: 400px;
+            z-index: 10000;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        `;
+        document.body.appendChild(messageDiv);
+    }
+
+    const colors = {
+        success: '#d4edda',
+        error: '#f8d7da',
+        info: '#d1ecf1',
+        warning: '#fff3cd'
+    };
+
+    const textColors = {
+        success: '#155724',
+        error: '#721c24',
+        info: '#0c5460',
+        warning: '#856404'
+    };
+
+    messageDiv.style.backgroundColor = colors[type] || colors.info;
+    messageDiv.style.color = textColors[type] || textColors.info;
+    messageDiv.style.border = `1px solid ${textColors[type] || textColors.info}`;
+    messageDiv.textContent = message;
+    messageDiv.style.display = 'block';
+
+    setTimeout(() => {
+        messageDiv.style.display = 'none';
+    }, 5000);
+}
+
+function showLoading(show = true) {
+    let spinner = document.getElementById('loadingSpinner');
+    if (!spinner) {
+        spinner = document.createElement('div');
+        spinner.id = 'loadingSpinner';
+        spinner.innerHTML = `
+            <div style="background: white; padding: 30px; border-radius: 10px; text-align: center;">
+                <div style="border: 5px solid #f3f3f3; border-top: 5px solid #667eea; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 0 auto 15px;"></div>
+                <p style="margin: 0; color: #333;">Loading...</p>
+            </div>
+        `;
+        spinner.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        `;
+        
+        // Add spin animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        document.body.appendChild(spinner);
+    }
+    spinner.style.display = show ? 'flex' : 'none';
 }
 
 // Export functions for global access

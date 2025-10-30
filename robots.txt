@@ -12,5 +12,5 @@ Disallow: /DominguezMorata_Portal.html
 Disallow: /DominguezMorata_Portal_Tooltips.html
 Disallow: /modules/
 
-# Sitemaps (update URL after deployment)
-# Sitemap: https://your-domain.vercel.app/sitemap.xml
+# Sitemaps - update with your actual domain after deployment
+# Example: Sitemap: https://dmkygab-portal.vercel.app/sitemap.xml

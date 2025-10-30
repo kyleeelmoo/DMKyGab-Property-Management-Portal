@@ -29,7 +29,7 @@ Implemented in `assets/js/app.js`:
 
 ```javascript
 // Password requirements enforced
-const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/;
+const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}/;
 
 // Requirements:
 - Minimum 8 characters

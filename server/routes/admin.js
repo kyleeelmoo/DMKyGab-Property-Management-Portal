@@ -3,9 +3,10 @@ const router = express.Router();
 const db = require('../config/database');
 const emailService = require('../utils/emailService');
 const { authMiddleware, adminMiddleware } = require('../middleware/auth');
+const { adminLimiter } = require('../middleware/rateLimiter');
 
 // Get all pending users (admin only)
-router.get('/pending-users', authMiddleware, adminMiddleware, async (req, res) => {
+router.get('/pending-users', adminLimiter, authMiddleware, adminMiddleware, async (req, res) => {
   try {
     const users = await db.query(
       'SELECT id, name, email, phone, role, created_at FROM users WHERE status = ? ORDER BY created_at DESC',
@@ -19,7 +20,7 @@ router.get('/pending-users', authMiddleware, adminMiddleware, async (req, res) =
 });
 
 // Get all users (admin only)
-router.get('/users', authMiddleware, adminMiddleware, async (req, res) => {
+router.get('/users', adminLimiter, authMiddleware, adminMiddleware, async (req, res) => {
   try {
     const { status } = req.query;
     let query = 'SELECT id, name, email, phone, role, status, created_at FROM users';
@@ -41,7 +42,7 @@ router.get('/users', authMiddleware, adminMiddleware, async (req, res) => {
 });
 
 // Approve user (admin only)
-router.post('/approve-user/:userId', authMiddleware, adminMiddleware, async (req, res) => {
+router.post('/approve-user/:userId', adminLimiter, authMiddleware, adminMiddleware, async (req, res) => {
   try {
     const { userId } = req.params;
 
@@ -76,7 +77,7 @@ router.post('/approve-user/:userId', authMiddleware, adminMiddleware, async (req
 });
 
 // Reject user (admin only)
-router.post('/reject-user/:userId', authMiddleware, adminMiddleware, async (req, res) => {
+router.post('/reject-user/:userId', adminLimiter, authMiddleware, adminMiddleware, async (req, res) => {
   try {
     const { userId } = req.params;
 
@@ -108,7 +109,7 @@ router.post('/reject-user/:userId', authMiddleware, adminMiddleware, async (req,
 });
 
 // Get user details (admin only)
-router.get('/user/:userId', authMiddleware, adminMiddleware, async (req, res) => {
+router.get('/user/:userId', adminLimiter, authMiddleware, adminMiddleware, async (req, res) => {
   try {
     const { userId } = req.params;
 

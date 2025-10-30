@@ -4,7 +4,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const db = require('../config/database');
 const emailService = require('../utils/emailService');
-const { emailVerificationLimiter, loginLimiter, registrationLimiter } = require('../middleware/rateLimiter');
+const { emailVerificationLimiter, loginLimiter, registrationLimiter, generalLimiter } = require('../middleware/rateLimiter');
 
 // Generate random 6-digit code
 function generateVerificationCode() {
@@ -266,7 +266,7 @@ router.post('/login', loginLimiter, async (req, res) => {
 });
 
 // Check authentication status
-router.get('/me', async (req, res) => {
+router.get('/me', generalLimiter, async (req, res) => {
   try {
     const token = req.headers.authorization?.split(' ')[1];
 

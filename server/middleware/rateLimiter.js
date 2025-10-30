@@ -33,8 +33,32 @@ const registrationLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+// Rate limiter for admin operations
+const adminLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 50, // Limit each IP to 50 admin requests per windowMs
+  message: {
+    error: 'Too many admin requests from this IP, please try again later.'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Rate limiter for general API requests
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  message: {
+    error: 'Too many requests from this IP, please try again later.'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 module.exports = {
   emailVerificationLimiter,
   loginLimiter,
-  registrationLimiter
+  registrationLimiter,
+  adminLimiter,
+  generalLimiter
 };

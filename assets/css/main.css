@@ -900,3 +900,55 @@ body {
 .hidden {
     display: none;
 }
+
+/* Performance Optimizations */
+* {
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Accessibility Improvements */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+/* Focus styles for keyboard navigation */
+a:focus,
+button:focus,
+input:focus,
+select:focus,
+textarea:focus {
+    outline: 2px solid var(--secondary-color);
+    outline-offset: 2px;
+}
+
+/* Smooth scrolling */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Print styles */
+@media print {
+    .sidebar,
+    .top-nav,
+    .notification-panel {
+        display: none;
+    }
+    
+    .main-content {
+        margin-left: 0;
+        padding: 20px;
+    }
+}

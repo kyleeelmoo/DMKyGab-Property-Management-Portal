@@ -1,0 +1,34 @@
+# Vercel deployment ignore file
+# Files and directories to exclude from deployment
+
+# Development files
+.git
+.github
+.gitignore
+.env
+.env.*
+!.env.example
+
+# Documentation
+README_Version4.md
+
+# Temporary files
+*.tmp
+*.log
+.DS_Store
+Thumbs.db
+
+# Archives
+*.zip
+
+# Other HTML versions (keep only index.html)
+DominguezMorata_Portal.html
+DominguezMorata_Portal_Tooltips.html
+DominguezMorata_Portal_Tooltips(1).html
+DMKyGab_Webportal (2).zip
+
+# Modules folder (if not used in production)
+# modules/
+
+# Node modules if any
+node_modules/

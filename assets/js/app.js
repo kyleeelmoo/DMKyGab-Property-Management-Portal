@@ -789,6 +789,13 @@ function formatDate(dateString) {
     });
 }
 
+// HTML escape function to prevent XSS
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
 // Export functions for global access
 window.loadPage = loadPage;
 window.openAddTenantModal = openAddTenantModal;
@@ -838,11 +845,15 @@ function showToast(message, type = 'info', title = '') {
         info: 'fa-info-circle'
     };
     
+    // Escape user input to prevent XSS
+    const escapedTitle = title ? escapeHtml(title) : '';
+    const escapedMessage = escapeHtml(message);
+    
     toast.innerHTML = `
         <i class="fas ${icons[type]}"></i>
         <div class="toast-message">
-            ${title ? `<strong>${title}</strong>` : ''}
-            <span>${message}</span>
+            ${escapedTitle ? `<strong>${escapedTitle}</strong>` : ''}
+            <span>${escapedMessage}</span>
         </div>
         <button class="toast-close" onclick="this.parentElement.remove()">
             <i class="fas fa-times"></i>

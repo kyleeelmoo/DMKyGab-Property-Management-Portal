@@ -270,6 +270,14 @@ function showMainApp() {
 
     if (currentUser) {
         document.getElementById('userNameDisplay').textContent = currentUser.name;
+        
+        // Show admin menu item if user is admin
+        if (currentUser.role === 'admin') {
+            const adminMenuItem = document.getElementById('adminMenuItem');
+            if (adminMenuItem) {
+                adminMenuItem.style.display = 'block';
+            }
+        }
     }
 
     // Load initial page
@@ -281,10 +289,17 @@ function handleLogout() {
         currentUser = null;
         isAuthenticated = false;
         localStorage.removeItem('dmkygab_user');
+        localStorage.removeItem('dmkygab_token');
         
         document.getElementById('mainApp').style.display = 'none';
         document.getElementById('loginScreen').style.display = 'flex';
         document.getElementById('loginForm').reset();
+        
+        // Hide admin menu item
+        const adminMenuItem = document.getElementById('adminMenuItem');
+        if (adminMenuItem) {
+            adminMenuItem.style.display = 'none';
+        }
     }
 }
 
@@ -363,6 +378,9 @@ function loadPage(pageName) {
                 break;
             case 'analytics':
                 loadAnalyticsPage();
+                break;
+            case 'admin':
+                loadAdminPage();
                 break;
         }
     }
@@ -744,6 +762,187 @@ function loadAnalyticsPage() {
     document.getElementById('analyticsPage').innerHTML = content;
 }
 
+// Admin Page
+async function loadAdminPage() {
+    if (!currentUser || currentUser.role !== 'admin') {
+        showMessage('Access denied. Admin privileges required.', 'error');
+        loadPage('dashboard');
+        return;
+    }
+
+    showLoading(true);
+
+    try {
+        const token = localStorage.getItem('dmkygab_token');
+        const response = await fetch(`${API_BASE_URL}/admin/pending-users`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || 'Failed to load pending users');
+        }
+
+        const content = `
+            <div class="page-header">
+                <h1>User Approval Management</h1>
+                <p>Review and approve user registration requests</p>
+            </div>
+
+            <div class="stats-grid" style="margin-bottom: 30px;">
+                <div class="stat-card">
+                    <div class="stat-icon orange">
+                        <i class="fas fa-user-clock"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>Pending Approvals</h3>
+                        <p class="stat-number">${data.users.length}</p>
+                        <small>Awaiting review</small>
+                    </div>
+                </div>
+            </div>
+
+            ${data.users.length === 0 ? `
+                <div style="text-align: center; padding: 50px; background: #f9f9f9; border-radius: 10px;">
+                    <i class="fas fa-check-circle" style="font-size: 64px; color: #28a745; margin-bottom: 20px;"></i>
+                    <h2>All Caught Up!</h2>
+                    <p style="color: #666;">No pending user approvals at the moment.</p>
+                </div>
+            ` : `
+                <div class="data-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>Role</th>
+                                <th>Registration Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${data.users.map(user => `
+                                <tr id="user-row-${user.id}">
+                                    <td><strong>${user.name}</strong></td>
+                                    <td>${user.email}</td>
+                                    <td>${user.phone || 'N/A'}</td>
+                                    <td><span class="status-badge normal">${user.role}</span></td>
+                                    <td>${new Date(user.created_at).toLocaleDateString()}</td>
+                                    <td>
+                                        <button class="btn btn-primary" onclick="approveUser(${user.id})" style="padding: 5px 10px; font-size: 12px; margin-right: 5px;">
+                                            <i class="fas fa-check"></i> Approve
+                                        </button>
+                                        <button class="btn btn-secondary" onclick="rejectUser(${user.id})" style="padding: 5px 10px; font-size: 12px; background: #dc3545;">
+                                            <i class="fas fa-times"></i> Reject
+                                        </button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `}
+        `;
+
+        document.getElementById('adminPage').innerHTML = content;
+    } catch (error) {
+        showMessage(error.message || 'Failed to load pending users', 'error');
+        document.getElementById('adminPage').innerHTML = `
+            <div class="page-header">
+                <h1>User Approval Management</h1>
+                <p>Error loading pending users</p>
+            </div>
+            <div style="text-align: center; padding: 50px;">
+                <p style="color: #dc3545;">${error.message}</p>
+            </div>
+        `;
+    } finally {
+        showLoading(false);
+    }
+}
+
+async function approveUser(userId) {
+    if (!confirm('Are you sure you want to approve this user?')) {
+        return;
+    }
+
+    showLoading(true);
+
+    try {
+        const token = localStorage.getItem('dmkygab_token');
+        const response = await fetch(`${API_BASE_URL}/admin/approve-user/${userId}`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || 'Failed to approve user');
+        }
+
+        showMessage('User approved successfully!', 'success');
+        
+        // Remove the row from the table
+        const row = document.getElementById(`user-row-${userId}`);
+        if (row) {
+            row.remove();
+        }
+
+        // Reload the page to update stats
+        setTimeout(() => loadAdminPage(), 1000);
+    } catch (error) {
+        showMessage(error.message || 'Failed to approve user', 'error');
+    } finally {
+        showLoading(false);
+    }
+}
+
+async function rejectUser(userId) {
+    if (!confirm('Are you sure you want to reject this user? This action cannot be undone.')) {
+        return;
+    }
+
+    showLoading(true);
+
+    try {
+        const token = localStorage.getItem('dmkygab_token');
+        const response = await fetch(`${API_BASE_URL}/admin/reject-user/${userId}`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || 'Failed to reject user');
+        }
+
+        showMessage('User rejected successfully', 'info');
+        
+        // Remove the row from the table
+        const row = document.getElementById(`user-row-${userId}`);
+        if (row) {
+            row.remove();
+        }
+
+        // Reload the page to update stats
+        setTimeout(() => loadAdminPage(), 1000);
+    } catch (error) {
+        showMessage(error.message || 'Failed to reject user', 'error');
+    } finally {
+        showLoading(false);
+    }
+}
+
 // Notification Functions
 function initializeNotifications() {
     const notificationIcon = document.getElementById('notificationIcon');
@@ -1016,3 +1215,5 @@ window.openAddTenantModal = openAddTenantModal;
 window.openAddMaintenanceModal = openAddMaintenanceModal;
 window.openAddLeaseModal = openAddLeaseModal;
 window.viewTenant = viewTenant;
+window.approveUser = approveUser;
+window.rejectUser = rejectUser;

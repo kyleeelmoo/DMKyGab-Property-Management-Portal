@@ -71,41 +71,48 @@ function initializeAuth() {
     }
 
     // Check for saved session
+    const token = localStorage.getItem('dmkygab_token');
     const savedUser = localStorage.getItem('dmkygab_user');
-    if (savedUser) {
+    if (token && savedUser) {
         currentUser = JSON.parse(savedUser);
         isAuthenticated = true;
         showMainApp();
     }
 }
 
-function handleLogin(e) {
+async function handleLogin(e) {
     e.preventDefault();
     
     const email = document.getElementById('loginEmail').value;
     const password = document.getElementById('loginPassword').value;
     const rememberMe = document.getElementById('rememberMe').checked;
 
-    // Simple validation (in production, this would be server-side)
-    if (email && password) {
-        currentUser = {
-            name: 'John Doe',
-            email: email,
-            role: 'admin'
-        };
-        isAuthenticated = true;
+    try {
+        showLoading('Logging in...');
+        
+        const response = await authAPI.login(email, password);
+        
+        if (response.success) {
+            currentUser = response.user;
+            isAuthenticated = true;
 
-        if (rememberMe) {
-            localStorage.setItem('dmkygab_user', JSON.stringify(currentUser));
+            // Save token and user data
+            localStorage.setItem('dmkygab_token', response.token);
+            if (rememberMe) {
+                localStorage.setItem('dmkygab_user', JSON.stringify(currentUser));
+            }
+
+            hideLoading();
+            showToast('Login successful!', 'success');
+            showMainApp();
         }
-
-        showMainApp();
-    } else {
-        alert('Please enter valid credentials');
+    } catch (error) {
+        hideLoading();
+        showToast(error.message || 'Login failed. Please try again.', 'error');
     }
 }
 
-function handleRegister(e) {
+async function handleRegister(e) {
     e.preventDefault();
 
     const name = document.getElementById('regName').value;
@@ -115,37 +122,51 @@ function handleRegister(e) {
     const password = document.getElementById('regPassword').value;
     const confirmPassword = document.getElementById('regConfirmPassword').value;
 
-    // Validate password
+    // Client-side validation
     if (password.length < 8) {
-        alert('Password must be at least 8 characters long');
+        showToast('Password must be at least 8 characters long', 'error');
         return;
     }
 
     if (password !== confirmPassword) {
-        alert('Passwords do not match');
+        showToast('Passwords do not match', 'error');
         return;
     }
 
     // Password strength validation
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/;
     if (!passwordRegex.test(password)) {
-        alert('Password must include uppercase, lowercase, number, and special character');
+        showToast('Password must include uppercase, lowercase, number, and special character', 'error');
         return;
     }
 
-    // Create user account (in production, this would be server-side)
-    currentUser = {
-        name: name,
-        email: email,
-        phone: phone,
-        role: role
-    };
-    isAuthenticated = true;
+    try {
+        showLoading('Creating account...');
+        
+        const response = await authAPI.register({
+            name,
+            email,
+            phone,
+            role,
+            password
+        });
 
-    localStorage.setItem('dmkygab_user', JSON.stringify(currentUser));
-    
-    alert('Registration successful!');
-    showMainApp();
+        if (response.success) {
+            currentUser = response.user;
+            isAuthenticated = true;
+
+            // Save token and user data
+            localStorage.setItem('dmkygab_token', response.token);
+            localStorage.setItem('dmkygab_user', JSON.stringify(currentUser));
+
+            hideLoading();
+            showToast('Registration successful!', 'success');
+            showMainApp();
+        }
+    } catch (error) {
+        hideLoading();
+        showToast(error.message || 'Registration failed. Please try again.', 'error');
+    }
 }
 
 function showMainApp() {

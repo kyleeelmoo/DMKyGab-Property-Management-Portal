@@ -2,33 +2,25 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const rateLimit = require('express-rate-limit');
 
 const authRoutes = require('./routes/auth');
 const adminRoutes = require('./routes/admin');
+const { generalLimiter, staticFileLimiter } = require('./middleware/rateLimiter');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-
-// General rate limiter for all requests
-const generalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 200, // Limit each IP to 200 requests per windowMs
-  message: {
-    error: 'Too many requests from this IP, please try again later.'
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(generalLimiter);
 
-// Serve static files from the root directory
+// Serve static files with rate limiting
+app.use(staticFileLimiter);
 app.use(express.static(path.join(__dirname, '..')));
+
+// API Routes (with rate limiting)
+app.use('/api', generalLimiter);
 
 // API Routes
 app.use('/api/auth', authRoutes);

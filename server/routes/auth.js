@@ -54,7 +54,7 @@ router.post('/send-verification-code', emailVerificationLimiter, async (req, res
 });
 
 // Verify code
-router.post('/verify-code', async (req, res) => {
+router.post('/verify-code', emailVerificationLimiter, async (req, res) => {
   try {
     const { email, code } = req.body;
 

@@ -47,7 +47,7 @@ const adminLimiter = rateLimit({
 // Rate limiter for general API requests
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per windowMs
+  max: 200, // Limit each IP to 200 requests per windowMs (includes static files)
   message: {
     error: 'Too many requests from this IP, please try again later.'
   },
@@ -55,10 +55,38 @@ const generalLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+// Very generous rate limiter for static files (CSS, JS, images)
+const staticFileLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 1000, // Limit each IP to 1000 requests per windowMs (very generous for assets)
+  message: {
+    error: 'Too many requests from this IP, please try again later.'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => {
+    // Skip rate limiting for common static file extensions
+    const path = req.path.toLowerCase();
+    return path.endsWith('.css') || 
+           path.endsWith('.js') || 
+           path.endsWith('.png') || 
+           path.endsWith('.jpg') || 
+           path.endsWith('.jpeg') ||
+           path.endsWith('.gif') ||
+           path.endsWith('.svg') ||
+           path.endsWith('.ico') ||
+           path.endsWith('.woff') ||
+           path.endsWith('.woff2') ||
+           path.endsWith('.ttf') ||
+           path.endsWith('.eot');
+  }
+});
+
 module.exports = {
   emailVerificationLimiter,
   loginLimiter,
   registrationLimiter,
   adminLimiter,
-  generalLimiter
+  generalLimiter,
+  staticFileLimiter
 };

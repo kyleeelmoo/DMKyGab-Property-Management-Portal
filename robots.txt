@@ -1,0 +1,16 @@
+# Robots.txt for DMKyGab Property Management Portal
+# This file tells search engines which pages to crawl
+
+User-agent: *
+Allow: /
+
+# Disallow access to assets individually (allow via index)
+Disallow: /assets/
+
+# Prevent crawling of alternative HTML files
+Disallow: /DominguezMorata_Portal.html
+Disallow: /DominguezMorata_Portal_Tooltips.html
+Disallow: /modules/
+
+# Sitemaps (update URL after deployment)
+# Sitemap: https://your-domain.vercel.app/sitemap.xml

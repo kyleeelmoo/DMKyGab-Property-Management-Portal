@@ -188,7 +188,8 @@
 - [ ] SSL certificate active
 
 ### URL Testing
-- [ ] Primary domain accessible: `dmkygab-webportal-ixw680apc-gabbydommor.vercel.app`
+- [ ] Primary domain accessible: `[YOUR_VERCEL_DOMAIN].vercel.app`
+  - Example: `dmkygab-webportal-ixw680apc-gabbydommor.vercel.app`
 - [ ] All routes work correctly
 - [ ] Static assets served from CDN
 - [ ] Cache headers set appropriately
@@ -225,9 +226,9 @@
 ## Testing Tools Used
 
 ### Development Tools
-- Browser DevTools (Chrome, Firefox)
-- Mobile device emulators
-- Network throttling
+- [Browser DevTools](https://developer.chrome.com/docs/devtools/) (Chrome, Firefox)
+- Mobile device emulators (built into DevTools)
+- Network throttling (DevTools Network tab)
 
 ### Online Tools
 - [Google PageSpeed Insights](https://pagespeed.web.dev/)

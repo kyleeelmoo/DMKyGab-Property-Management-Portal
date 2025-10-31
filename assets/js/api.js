@@ -7,7 +7,10 @@ const API_BASE_URL = window.location.hostname === 'localhost' || window.location
 const api = {
     // Helper to get auth token
     getToken() {
-        const user = localStorage.getItem('dmkygab_user');
+        let user = localStorage.getItem('dmkygab_user');
+        if (!user) {
+            user = sessionStorage.getItem('dmkygab_user');
+        }
         if (user) {
             const userData = JSON.parse(user);
             return userData.token;

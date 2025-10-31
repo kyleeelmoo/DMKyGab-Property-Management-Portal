@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DMKyGab Property Management Portal</title>
+    <link rel="stylesheet" href="assets/css/main.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Login Screen (Initially visible) -->
+    <div id="loginScreen" class="auth-screen">
+        <div class="auth-container">
+            <div class="auth-header">
+                <i class="fas fa-building"></i>
+                <h1>DMKyGab Property Management</h1>
+                <p>Your Complete Property Management Solution</p>
+            </div>
+            <form id="loginForm" class="auth-form">
+                <h2>Login</h2>
+                <div class="form-group">
+                    <label for="loginEmail">
+                        <i class="fas fa-envelope"></i> Email
+                    </label>
+                    <input type="email" id="loginEmail" required placeholder="Enter your email">
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">
+                        <i class="fas fa-lock"></i> Password
+                    </label>
+                    <input type="password" id="loginPassword" required placeholder="Enter your password">
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="rememberMe"> Remember me
+                    </label>
+                </div>
+                <button type="submit" class="btn btn-primary">Login</button>
+                <p class="auth-switch">Don't have an account? <a href="#" id="showRegister">Register here</a></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Registration Screen -->
+    <div id="registerScreen" class="auth-screen" style="display: none;">
+        <div class="auth-container">
+            <div class="auth-header">
+                <i class="fas fa-building"></i>
+                <h1>DMKyGab Property Management</h1>
+                <p>Create Your Account</p>
+            </div>
+            <form id="registerForm" class="auth-form">
+                <h2>Register</h2>
+                <div class="form-group">
+                    <label for="regName">
+                        <i class="fas fa-user"></i> Full Name
+                    </label>
+                    <input type="text" id="regName" required placeholder="Enter your full name">
+                </div>
+                <div class="form-group">
+                    <label for="regEmail">
+                        <i class="fas fa-envelope"></i> Email
+                    </label>
+                    <input type="email" id="regEmail" required placeholder="Enter your email">
+                </div>
+                <div class="form-group">
+                    <label for="regPhone">
+                        <i class="fas fa-phone"></i> Phone Number
+                    </label>
+                    <input type="tel" id="regPhone" required placeholder="Enter your phone number">
+                </div>
+                <div class="form-group">
+                    <label for="regRole">
+                        <i class="fas fa-user-tag"></i> Role
+                    </label>
+                    <select id="regRole" required>
+                        <option value="">Select Role</option>
+                        <option value="admin">Admin</option>
+                        <option value="manager">Property Manager</option>
+                        <option value="tenant">Tenant</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="regPassword">
+                        <i class="fas fa-lock"></i> Password
+                    </label>
+                    <input type="password" id="regPassword" required placeholder="Create password (min 8 characters)">
+                    <small class="password-hint">Must include uppercase, lowercase, number, and special character</small>
+                </div>
+                <div class="form-group">
+                    <label for="regConfirmPassword">
+                        <i class="fas fa-lock"></i> Confirm Password
+                    </label>
+                    <input type="password" id="regConfirmPassword" required placeholder="Confirm your password">
+                </div>
+                <button type="submit" class="btn btn-primary">Register</button>
+                <p class="auth-switch">Already have an account? <a href="#" id="showLogin">Login here</a></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Application (Hidden initially) -->
+    <div id="mainApp" style="display: none;">
+        <!-- Top Navigation Bar -->
+        <nav class="top-nav">
+            <div class="nav-left">
+                <button class="menu-toggle" id="menuToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="logo">
+                    <i class="fas fa-building"></i>
+                    <span>DMKyGab Portal</span>
+                </div>
+            </div>
+            <div class="nav-right">
+                <div class="notification-icon" id="notificationIcon">
+                    <i class="fas fa-bell"></i>
+                    <span class="badge" id="notificationBadge">3</span>
+                </div>
+                <div class="user-menu">
+                    <span id="userNameDisplay">John Doe</span>
+                    <i class="fas fa-user-circle"></i>
+                    <div class="user-dropdown">
+                        <a href="#" id="viewProfile"><i class="fas fa-user"></i> Profile</a>
+                        <a href="#" id="settingsLink"><i class="fas fa-cog"></i> Settings</a>
+                        <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Notification Panel -->
+        <div id="notificationPanel" class="notification-panel">
+            <div class="notification-header">
+                <h3>Notifications</h3>
+                <button class="close-panel" id="closeNotifications">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="notification-list">
+                <div class="notification-item unread">
+                    <i class="fas fa-dollar-sign"></i>
+                    <div>
+                        <strong>Rent Due Reminder</strong>
+                        <p>Rent payment is due in 3 days for Unit 205</p>
+                        <small>2 hours ago</small>
+                    </div>
+                </div>
+                <div class="notification-item unread">
+                    <i class="fas fa-wrench"></i>
+                    <div>
+                        <strong>Maintenance Completed</strong>
+                        <p>Plumbing repair in Unit 302 has been completed</p>
+                        <small>5 hours ago</small>
+                    </div>
+                </div>
+                <div class="notification-item">
+                    <i class="fas fa-file-contract"></i>
+                    <div>
+                        <strong>Lease Expiring Soon</strong>
+                        <p>Lease for Unit 405 expires in 30 days</p>
+                        <small>1 day ago</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar" id="sidebar">
+            <ul class="sidebar-menu">
+                <li class="active">
+                    <a href="#" data-page="dashboard">
+                        <i class="fas fa-home"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" data-page="tenants">
+                        <i class="fas fa-users"></i>
+                        <span>Tenant Management</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" data-page="maintenance">
+                        <i class="fas fa-tools"></i>
+                        <span>Maintenance Requests</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" data-page="leases">
+                        <i class="fas fa-file-contract"></i>
+                        <span>Lease Management</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" data-page="financials">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Financial Management</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" data-page="analytics">
+                        <i class="fas fa-chart-bar"></i>
+                        <span>Analytics</span>
+                    </a>
+                </li>
+                <li id="adminMenuItem" style="display: none;">
+                    <a href="#" data-page="admin">
+                        <i class="fas fa-user-shield"></i>
+                        <span>User Approval</span>
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content" id="mainContent">
+            <!-- Dashboard (Default View) -->
+            <div id="dashboardPage" class="page active">
+                <div class="page-header">
+                    <h1>Dashboard</h1>
+                    <p>Welcome back! Here's what's happening with your properties.</p>
+                </div>
+
+                <!-- Stats Cards -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon blue">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Total Tenants</h3>
+                            <p class="stat-number">42</p>
+                            <small class="stat-change positive">+5% from last month</small>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon green">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Rent Collected</h3>
+                            <p class="stat-number">$85,400</p>
+                            <small class="stat-change positive">+12% from last month</small>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon orange">
+                            <i class="fas fa-wrench"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Pending Maintenance</h3>
+                            <p class="stat-number">8</p>
+                            <small class="stat-change negative">3 urgent</small>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon purple">
+                            <i class="fas fa-file-contract"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Active Leases</h3>
+                            <p class="stat-number">38</p>
+                            <small class="stat-change">4 expiring soon</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity and Quick Actions -->
+                <div class="dashboard-grid">
+                    <div class="dashboard-card">
+                        <h2>Recent Maintenance Requests</h2>
+                        <div class="activity-list">
+                            <div class="activity-item">
+                                <div class="activity-icon urgent">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                </div>
+                                <div class="activity-details">
+                                    <strong>Water Leak - Unit 302</strong>
+                                    <p>Reported by John Smith</p>
+                                    <small>2 hours ago</small>
+                                </div>
+                                <span class="status-badge urgent">Urgent</span>
+                            </div>
+                            <div class="activity-item">
+                                <div class="activity-icon high">
+                                    <i class="fas fa-wrench"></i>
+                                </div>
+                                <div class="activity-details">
+                                    <strong>HVAC Repair - Unit 105</strong>
+                                    <p>Reported by Sarah Johnson</p>
+                                    <small>5 hours ago</small>
+                                </div>
+                                <span class="status-badge high">High</span>
+                            </div>
+                            <div class="activity-item">
+                                <div class="activity-icon normal">
+                                    <i class="fas fa-tools"></i>
+                                </div>
+                                <div class="activity-details">
+                                    <strong>Door Lock Replacement - Unit 201</strong>
+                                    <p>Reported by Mike Davis</p>
+                                    <small>1 day ago</small>
+                                </div>
+                                <span class="status-badge normal">Normal</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-card">
+                        <h2>Upcoming Rent Payments</h2>
+                        <div class="payment-list">
+                            <div class="payment-item">
+                                <div class="payment-info">
+                                    <strong>Unit 205 - Jane Williams</strong>
+                                    <small>Due: Dec 1, 2024</small>
+                                </div>
+                                <span class="payment-amount">$1,500</span>
+                            </div>
+                            <div class="payment-item">
+                                <div class="payment-info">
+                                    <strong>Unit 308 - Robert Chen</strong>
+                                    <small>Due: Dec 1, 2024</small>
+                                </div>
+                                <span class="payment-amount">$1,800</span>
+                            </div>
+                            <div class="payment-item overdue">
+                                <div class="payment-info">
+                                    <strong>Unit 410 - Lisa Anderson</strong>
+                                    <small>Overdue: Nov 25, 2024</small>
+                                </div>
+                                <span class="payment-amount">$1,350</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Other pages will be dynamically loaded here -->
+            <div id="tenantsPage" class="page"></div>
+            <div id="maintenancePage" class="page"></div>
+            <div id="leasesPage" class="page"></div>
+            <div id="financialsPage" class="page"></div>
+            <div id="analyticsPage" class="page"></div>
+            <div id="adminPage" class="page"></div>
+        </main>
+    </div>
+
+    <script src="assets/js/app.js"></script>
+</body>
+</html>
